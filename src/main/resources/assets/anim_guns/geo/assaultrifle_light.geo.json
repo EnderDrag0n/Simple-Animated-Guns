@@ -264,7 +264,7 @@
 				{
 					"name": "sight_default",
 					"parent": "gunbody",
-					"pivot": [0, 2.26187, -3.79336],
+					"pivot": [0, 2.5275, -2.17617],
 					"cubes": [
 						{
 							"origin": [0.125, 2.32624, -6.8125],

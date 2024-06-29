@@ -37,34 +37,31 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.RangedWeaponItem;
+import net.minecraft.inventory.StackReference;
+import net.minecraft.item.*;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.TypedActionResult;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public abstract class GunItem extends RangedWeaponItem implements FabricItem, GeoAnimatable, GeoItem
 {
@@ -95,6 +92,7 @@ public abstract class GunItem extends RangedWeaponItem implements FabricItem, Ge
     private final int reloadStage3;
     public final FiringType firingType;
     public final ArmType armType;
+    private final AttachmentItem.AttachType[] acceptedAttachmentTypes;
     private final Multimap<EntityAttribute, EntityAttributeModifier> attributeModifiers;
 
     protected final Supplier<Object> renderProvider = GeoItem.makeRenderer(this);
@@ -106,7 +104,7 @@ public abstract class GunItem extends RangedWeaponItem implements FabricItem, Ge
                    float[] gunRecoil, int pelletCount, LoadingType loadingType,
                    SoundEvent reloadSoundStart, SoundEvent reloadSoundMagOut, SoundEvent reloadSoundMagIn, SoundEvent reloadSoundEnd,
                    SoundEvent shootSound, SoundEvent postShootSound, int reloadCycles, boolean isScoped, boolean unscopeAfterShot,
-                   int reloadStage1, int reloadStage2, int reloadStage3, FiringType firingType, ArmType armType)
+                   int reloadStage1, int reloadStage2, int reloadStage3, FiringType firingType, ArmType armType, AttachmentItem.AttachType[] acceptedAttachmentTypes)
     {
         super(settings.maxDamage((magSize * 10) + 1));
         SingletonGeoAnimatable.registerSyncedAnimatable(this);
@@ -137,6 +135,7 @@ public abstract class GunItem extends RangedWeaponItem implements FabricItem, Ge
         this.reloadStage3 = reloadStage3;
         this.firingType = firingType;
         this.armType = armType;
+        this.acceptedAttachmentTypes = acceptedAttachmentTypes;
         ImmutableMultimap.Builder<EntityAttribute, EntityAttributeModifier> builder = ImmutableMultimap.builder();
         builder.put(GunAttributes.GUN_DAMAGE, new EntityAttributeModifier(BULLET_DAMAGE_MODIFIER_ID, "Weapon modifier", this.gunDamage, EntityAttributeModifier.Operation.ADDITION));
         this.attributeModifiers = builder.build();
@@ -179,8 +178,8 @@ public abstract class GunItem extends RangedWeaponItem implements FabricItem, Ge
 
                 bullet.setPosition(user.getX(), user.getEyeY(), user.getZ());
 
-                Vec3d vertiSpread = BulletUtil.vertiSpread(user, (random.nextFloat(-bulletSpread[0] * 5, bulletSpread[0] * 5)));
-                Vec3d horiSpread = BulletUtil.horiSpread(user, (random.nextFloat(-bulletSpread[1] * 5, bulletSpread[1] * 5)));
+                Vec3d vertiSpread = BulletUtil.vertiSpread(user, (random.nextFloat(-bulletSpread[0] * 5, bulletSpread[0] * 5)) * getSpreadMult(itemStack));
+                Vec3d horiSpread = BulletUtil.horiSpread(user, (random.nextFloat(-bulletSpread[1] * 5, bulletSpread[1] * 5))  * getSpreadMult(itemStack));
 
                 Vec3d result = user.getRotationVector().add(vertiSpread).add(horiSpread);
 
@@ -209,7 +208,7 @@ public abstract class GunItem extends RangedWeaponItem implements FabricItem, Ge
         if (!user.getAbilities().creativeMode)
         {
             itemStack.getOrCreateNbt().putInt("Clip", itemStack.getOrCreateNbt().getInt("Clip") - 1);
-            itemStack.damage(10, user, e -> e.sendEquipmentBreakStatus(EquipmentSlot.MAINHAND));
+            itemStack.setDamage(this.getMaxDamage() - ((itemStack.getOrCreateNbt().getInt("Clip") * 10) + 1));
         }
 
         world.playSound(null,
@@ -405,14 +404,48 @@ public abstract class GunItem extends RangedWeaponItem implements FabricItem, Ge
     public float getRecoilX(ItemStack stack)
     {
         boolean rd = this.random.nextBoolean();
-        return stack.getOrCreateNbt().getBoolean("isAiming") ?
+        return (stack.getOrCreateNbt().getBoolean("isAiming") ?
                 (rd ? this.gunRecoil[0] : -this.gunRecoil[0]) / 2 :
-                (rd ? this.gunRecoil[0] : -this.gunRecoil[0]);
+                (rd ? this.gunRecoil[0] : -this.gunRecoil[0])) * getRecoilMult(stack);
     }
 
     public float getRecoilY(ItemStack stack)
     {
-        return stack.getOrCreateNbt().getBoolean("isAiming") ? this.gunRecoil[1] / 2 : this.gunRecoil[1];
+        return (stack.getOrCreateNbt().getBoolean("isAiming") ? this.gunRecoil[1] / 2 : this.gunRecoil[1]) * getRecoilMult(stack);
+    }
+
+    public float getRecoilMult(ItemStack stack)
+    {
+        NbtCompound nbtCompound = stack.getOrCreateNbt();
+        NbtList list = nbtCompound.getList("Items", NbtElement.COMPOUND_TYPE);
+        //List<AttachmentItem> attachments = new ArrayList<>();
+        float recoilMult = 1.0f;
+
+        List<NbtCompound> l = list.stream().filter(NbtCompound.class::isInstance).map(NbtCompound.class::cast).toList();
+
+        for (NbtCompound n : l)
+        {
+            recoilMult *= ((AttachmentItem) ItemStack.fromNbt(n).getItem()).getRecoilMult();
+        }
+
+        return recoilMult;
+    }
+
+    public float getSpreadMult(ItemStack stack)
+    {
+        NbtCompound nbtCompound = stack.getOrCreateNbt();
+        NbtList list = nbtCompound.getList("Items", NbtElement.COMPOUND_TYPE);
+        //List<AttachmentItem> attachments = new ArrayList<>();
+        float spreadMult = 1.0f;
+
+        List<NbtCompound> l = list.stream().filter(NbtCompound.class::isInstance).map(NbtCompound.class::cast).toList();
+
+        for (NbtCompound n : l)
+        {
+            spreadMult *= ((AttachmentItem) ItemStack.fromNbt(n).getItem()).getSpreadMult();
+        }
+
+        return spreadMult;
     }
 
     public static boolean isLoaded(ItemStack stack)
@@ -600,6 +633,140 @@ public abstract class GunItem extends RangedWeaponItem implements FabricItem, Ge
     }
 
     @Override
+    public boolean onClicked(ItemStack stack, ItemStack otherStack, Slot slot, ClickType clickType, PlayerEntity player, StackReference cursorStackReference)
+    {
+        if (clickType != ClickType.RIGHT) return false;
+
+        if (otherStack.isEmpty())
+        {
+            removeFirstStack(stack).ifPresent(itemStack ->
+            {
+                player.playSound(SoundEvents.ITEM_BUNDLE_REMOVE_ONE, 0.8f, 0.8f + player.getWorld().getRandom().nextFloat() * 0.4f);
+                cursorStackReference.set(itemStack);
+            });
+        }
+        else
+        {
+            int i = addAttachment(stack, otherStack);
+
+            if (i > 0)
+            {
+                otherStack.decrement(i);
+                player.playSound(SoundEvents.ITEM_BUNDLE_INSERT, 0.8f, 0.8f + player.getWorld().getRandom().nextFloat() * 0.4f);
+            }
+
+        }
+
+        return true;
+    }
+
+    private int addAttachment(ItemStack gun, ItemStack attachment)
+    {
+        if (attachment.isEmpty() || !(attachment.getItem() instanceof AttachmentItem)) return 0;
+
+        NbtCompound nbtCompound = gun.getOrCreateNbt();
+
+        if (!nbtCompound.contains("Items")) nbtCompound.put("Items", new NbtList());
+
+        int i = getExistingAttachments(gun);int k = Math.min(attachment.getCount(), (3 - i));
+
+        if (k == 0) return 0;
+
+        NbtList nbtList = nbtCompound.getList("Items", NbtElement.COMPOUND_TYPE);
+        Optional<NbtCompound> existingAttach = checkExistingAttachType(attachment, nbtList);
+
+        if (existingAttach.isPresent() || !acceptedAttachment(((AttachmentItem)attachment.getItem()).getAttachType()))
+        {
+            return 0;
+        }
+        else
+        {
+            int attachID = ((AttachmentItem)attachment.getItem()).getId();
+            AttachmentItem.AttachType attachType = ((AttachmentItem) attachment.getItem()).getAttachType();
+
+            switch(attachType)
+            {
+                case SIGHT -> nbtCompound.putInt("sightID", attachID);
+                case GRIP -> nbtCompound.putInt("gripID", attachID);
+                case MUZZLE -> nbtCompound.putInt("muzzleID", attachID);
+            }
+
+            ItemStack itemStack2 = attachment.copyWithCount(k);
+            NbtCompound nbtCompound3 = new NbtCompound();
+            itemStack2.writeNbt(nbtCompound3);
+            nbtList.add(0, nbtCompound3);
+        }
+
+        return 1;
+    }
+
+    private Optional<ItemStack> removeFirstStack(ItemStack gun)
+    {
+        NbtCompound nbtCompound = gun.getOrCreateNbt();
+
+        if (!nbtCompound.contains("Items")) return Optional.empty();
+
+        NbtList nbtList = nbtCompound.getList("Items", NbtElement.COMPOUND_TYPE);
+
+        if (nbtList.isEmpty()) return Optional.empty();
+
+        NbtCompound nbtCompound2 = nbtList.getCompound(0);
+        ItemStack attachment = ItemStack.fromNbt(nbtCompound2);
+        nbtList.remove(0);
+
+        AttachmentItem.AttachType attachType = ((AttachmentItem) attachment.getItem()).getAttachType();
+
+        switch(attachType)
+        {
+            case SIGHT -> nbtCompound.putInt("sightID", 0);
+            case GRIP -> nbtCompound.putInt("gripID", 0);
+            case MUZZLE -> nbtCompound.putInt("muzzleID", 0);
+        }
+
+        if (nbtList.isEmpty()) gun.removeSubNbt("Items");
+
+        return Optional.of(attachment);
+    }
+
+    private int getExistingAttachments(ItemStack gun)
+    {
+        return getAttachments(gun).mapToInt(ItemStack::getCount).sum();
+    }
+
+    private Stream<ItemStack> getAttachments(ItemStack gun)
+    {
+        NbtCompound nbtCompound = gun.getNbt();
+        if (nbtCompound == null)
+        {
+            return Stream.empty();
+        }
+        NbtList nbtList = nbtCompound.getList("Items", NbtElement.COMPOUND_TYPE);
+        return nbtList.stream().map(NbtCompound.class::cast).map(ItemStack::fromNbt);
+    }
+
+    private Optional<NbtCompound> checkExistingAttachType(ItemStack attachment, NbtList items)
+    {
+        if (attachment.isOf(Items.BUNDLE)) {
+            return Optional.empty();
+        }
+
+        //items.stream().filter(NbtCompound.class::isInstance).map(NbtCompound.class::cast).filter(item -> ItemStack.canCombine(ItemStack.fromNbt(item), stack)).findFirst();
+        return items.stream().filter(NbtCompound.class::isInstance).map(NbtCompound.class::cast).filter(item ->
+                (ItemStack.fromNbt(item).getItem() instanceof AttachmentItem)
+                && (((AttachmentItem)ItemStack.fromNbt(item).getItem()).getAttachType() == ((AttachmentItem)attachment.getItem()).getAttachType()))
+                .findFirst();
+    }
+
+    private boolean acceptedAttachment(AttachmentItem.AttachType attachType)
+    {
+        for (AttachmentItem.AttachType attachType2 : acceptedAttachmentTypes)
+        {
+            if (attachType == attachType2) return true;
+        }
+        return false;
+    }
+
+    @Override
     public Predicate<ItemStack> getProjectiles()
     {
         return null;
@@ -638,14 +805,6 @@ public abstract class GunItem extends RangedWeaponItem implements FabricItem, Ge
         if (!gunNBT.contains("sightID")) gunNBT.putInt("sightID", 0);
 
         return gun.getOrCreateNbt().getInt("sightID");
-    }
-
-    public float getSightHeight(ItemStack gun)
-    {
-        NbtCompound gunNBT = gun.getOrCreateNbt();
-        if (!gunNBT.contains("sightHeight")) gunNBT.putFloat("sightHeight", 0);
-
-        return gun.getOrCreateNbt().getFloat("sightHeight");
     }
 
     public int getGripID(ItemStack gun)

@@ -25,6 +25,7 @@ import net.minecraft.util.Identifier;
 
 import java.util.Objects;
 
+
 public class GunRenderer extends GeoItemRenderer<GunItem> implements GeoRenderer<GunItem>
 {
     public GunRenderer(Identifier identifier)
@@ -33,9 +34,10 @@ public class GunRenderer extends GeoItemRenderer<GunItem> implements GeoRenderer
     }
     private VertexConsumerProvider bufferSource;
     private ModelTransformationMode renderType;
-    private Identifier foregripAttachment = new Identifier(AnimatedGuns.MOD_ID, "geo/attach_gr_vertical.geo.json");
-    private Identifier muzzleBrakeAttachment = new Identifier(AnimatedGuns.MOD_ID, "geo/attach_ba_muzzlebrake.geo.json");
     //use getCurrentItemStack() to get the itemstack and the NBT data for the attachments
+
+    float sightDefaultHeight = 0.0f;
+    float sightAdjust = 0.0f;
 
     @Override
     protected void renderInGui(ModelTransformationMode transformType, MatrixStack poseStack, VertexConsumerProvider bufferSource, int packedLight, int packedOverlay)
@@ -64,7 +66,7 @@ public class GunRenderer extends GeoItemRenderer<GunItem> implements GeoRenderer
         {
             poseStack.push();
 
-            //Attachments test EXPERIMENTAL, NOT YET REFINED
+            //Attachments test
             int sightID = this.getAnimatable().getSightID(this.getCurrentItemStack());
             int gripID = this.getAnimatable().getGripID(this.getCurrentItemStack());
             int muzzleID = this.getAnimatable().getMuzzleID(this.getCurrentItemStack());
@@ -77,6 +79,27 @@ public class GunRenderer extends GeoItemRenderer<GunItem> implements GeoRenderer
                     bone.setChildrenHidden(false);
                     renderArms = true;
                 }
+                case "gunbody", "magazine2" ->
+                {
+                    if (sightID > 0) // && this.getCurrentItemStack().getOrCreateNbt().getBoolean("isAiming")
+                    {
+                        poseStack.translate(0,sightAdjust/16,0);
+                    }
+                }
+                case "muzzleflash" ->
+                {
+                    buffer1 = this.bufferSource.getBuffer(MuzzleFlashRenderType.getMuzzleFlash());
+
+                    if (sightID > 0) //  && this.getCurrentItemStack().getOrCreateNbt().getBoolean("isAiming")
+                    {
+                        poseStack.translate(0,sightAdjust/16,0);
+                    }
+                }
+                case "sight_default" ->
+                {
+                    sightDefaultHeight = bone.getPivotY();
+                    bone.setHidden(sightID > 0);
+                }
                 case "sightPos" ->
                 {
                     buffer1 = this.bufferSource.getBuffer(AttachmentRenderType.getAttachment(1, sightID));
@@ -85,14 +108,21 @@ public class GunRenderer extends GeoItemRenderer<GunItem> implements GeoRenderer
                         attachmentModel = AzureLibCache.getBakedModels().get(new Identifier(AnimatedGuns.MOD_ID, "geo/attach_si_"+sightID+".geo.json"));
 
                         attachmentBone = attachmentModel.getBone("sight").orElse(null);
+                        GeoBone reticle = attachmentModel.getBone("reticlePos").orElse(null);
 
                         if(attachmentBone != null)
                         {
                             //position the attachment to where  attachment bone is on model file
                             //bone doesn't have any cubes = no positional values
                             //luckily, pivot values still exist
+
+                            sightAdjust = sightDefaultHeight - bone.getPivotY() - attachmentModel.getBone("reticlePos").get().getPivotY();
+
                             poseStack.translate(bone.getPivotX()/16, bone.getPivotY()/16, bone.getPivotZ()/16);
                             super.renderCubesOfBone(poseStack, attachmentBone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+
+                            if (reticle != null)
+                                super.renderCubesOfBone(poseStack, reticle, this.bufferSource.getBuffer(AttachmentRenderType.getReticle()), packedLight, packedOverlay, red, green, blue, alpha);
                         }
                     }
                 }
@@ -107,9 +137,6 @@ public class GunRenderer extends GeoItemRenderer<GunItem> implements GeoRenderer
 
                         if(attachmentBone != null)
                         {
-                            //position the attachment to where  attachment bone is on model file
-                            //bone doesn't have any cubes = no positional values
-                            //luckily, pivot values still exist
                             poseStack.translate(bone.getPivotX()/16, bone.getPivotY()/16, bone.getPivotZ()/16);
                             super.renderCubesOfBone(poseStack, attachmentBone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
                         }
@@ -126,37 +153,10 @@ public class GunRenderer extends GeoItemRenderer<GunItem> implements GeoRenderer
 
                         if(attachmentBone != null)
                         {
-                            //position the attachment to where  attachment bone is on model file
-                            //bone doesn't have any cubes = no positional values
-                            //luckily, pivot values still exist
                             poseStack.translate(bone.getPivotX()/16, bone.getPivotY()/16, bone.getPivotZ()/16);
                             super.renderCubesOfBone(poseStack, attachmentBone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
                         }
                     }
-                }
-                case "gunbody" ->
-                {
-
-                    float sightHeight = this.getAnimatable().getSightHeight(this.getCurrentItemStack());
-
-                    if (sightID > 0 && this.getCurrentItemStack().getOrCreateNbt().getBoolean("isAiming"))
-                    {
-                        poseStack.translate(0,-sightHeight/16,0);
-                    }
-                }
-                case "muzzleflash" ->
-                {
-                    buffer1 = this.bufferSource.getBuffer(MuzzleFlashRenderType.getMuzzleFlash());
-                    float sightHeight = this.getAnimatable().getSightHeight(this.getCurrentItemStack());
-
-                    if (sightID > 0 && this.getCurrentItemStack().getOrCreateNbt().getBoolean("isAiming"))
-                    {
-                        poseStack.translate(0,-sightHeight/16,0);
-                    }
-                }
-                case "sight_default" ->
-                {
-                    bone.setHidden(sightID > 0);
                 }
             }
 
@@ -187,7 +187,8 @@ public class GunRenderer extends GeoItemRenderer<GunItem> implements GeoRenderer
                     playerEntityModel.leftSleeve.setPivot(bone.getPivotX(), bone.getPivotY(), bone.getPivotZ());
                     playerEntityModel.leftSleeve.setAngles(0, 0, 0);
                     playerEntityModel.leftSleeve.render(poseStack, sleeve, packedLight, packedOverlay, 1, 1, 1, 1);
-                } else if (bone.getName().equals("rightArm"))
+                }
+                else if (bone.getName().equals("rightArm"))
                 {
                     poseStack.scale(0.67f, 1.33f, 0.67f);
                     poseStack.translate(0.25, -0.43625, 0.1625);

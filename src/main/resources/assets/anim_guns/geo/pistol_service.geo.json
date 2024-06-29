@@ -178,6 +178,11 @@
 					]
 				},
 				{
+					"name": "muzzlePos",
+					"parent": "gunbody",
+					"pivot": [0, 1.05836, -3.58862]
+				},
+				{
 					"name": "magazine",
 					"parent": "gunbody",
 					"pivot": [0, -1.2425, 1.69112],

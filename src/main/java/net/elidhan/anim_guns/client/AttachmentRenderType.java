@@ -13,8 +13,16 @@ public class AttachmentRenderType extends RenderLayer
         super(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, startAction, endAction);
     }
 
+    private static final RenderLayer RETICLE = of(AnimatedGuns.MOD_ID+":reticle", VertexFormats.POSITION_COLOR_TEXTURE_LIGHT, VertexFormat.DrawMode.QUADS, 256, true, false, MultiPhaseParameters.builder().program(RenderPhase.POSITION_COLOR_TEXTURE_LIGHTMAP_PROGRAM).program(RenderPhase.EYES_PROGRAM).texture(new RenderPhase.Texture(new Identifier(AnimatedGuns.MOD_ID, "textures/misc/reticle.png"), false, false)).transparency(TRANSLUCENT_TRANSPARENCY).cull(RenderPhase.DISABLE_CULLING).build(false));
+
+    public static RenderLayer getReticle()
+    {
+        return RETICLE;
+    }
+
     public static RenderLayer getAttachment(int attachmentType, int attachmentID)
     {
+        if (attachmentID <= 0) return RenderLayer.getEntityTranslucent(new Identifier(AnimatedGuns.MOD_ID + ":textures/misc/attach_si_1.png"));
         switch (attachmentType)
         {
             case 1 ->
@@ -33,6 +41,6 @@ public class AttachmentRenderType extends RenderLayer
                 return RenderLayer.of(AnimatedGuns.MOD_ID+":"+3+"_"+attachmentID, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, VertexFormat.DrawMode.QUADS, 256, true, false, multiPhaseParameters);
             }
         }
-        return RenderLayer.getEntityTranslucent(new Identifier(AnimatedGuns.MOD_ID + "misc/attach_si_"+attachmentID));
+        return RenderLayer.getEntityTranslucent(new Identifier(AnimatedGuns.MOD_ID + ":textures/misc/attach_si_1.png"));
     }
 }

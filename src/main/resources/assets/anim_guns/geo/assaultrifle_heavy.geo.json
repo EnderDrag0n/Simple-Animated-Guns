@@ -7,8 +7,8 @@
 				"texture_width": 16,
 				"texture_height": 16,
 				"visible_bounds_width": 4,
-				"visible_bounds_height": 1.5,
-				"visible_bounds_offset": [0, 0.25, 0]
+				"visible_bounds_height": 2.5,
+				"visible_bounds_offset": [0, 0.75, 0]
 			},
 			"bones": [
 				{
@@ -274,9 +274,24 @@
 					]
 				},
 				{
-					"name": "sight_0",
+					"name": "sightPos",
 					"parent": "gunbody",
-					"pivot": [0.5, 0, 0.375],
+					"pivot": [0, 1.65625, 0.82813]
+				},
+				{
+					"name": "gripPos",
+					"parent": "gunbody",
+					"pivot": [0, -0.21875, -3.73437]
+				},
+				{
+					"name": "muzzlePos",
+					"parent": "gunbody",
+					"pivot": [0, 0.5313, -10.625]
+				},
+				{
+					"name": "sight_default",
+					"parent": "gunbody",
+					"pivot": [0, 2.5313, -6.74609],
 					"cubes": [
 						{
 							"origin": [-0.25, 1.34375, -6.875],
@@ -434,8 +449,6 @@
 						{
 							"origin": [4.5, -4, 4.5],
 							"size": [3, 16, 3],
-							"pivot": [6, 6, 6],
-							"rotation": [0, 0, 0],
 							"uv": {
 								"north": {"uv": [12, 0], "uv_size": [3, 9]},
 								"east": {"uv": [0, 0], "uv_size": [3, 9]},
@@ -455,8 +468,6 @@
 						{
 							"origin": [-7.5, -4, 4.5],
 							"size": [3, 16, 3],
-							"pivot": [-6, 4, 6],
-							"rotation": [0, 0, 0],
 							"uv": {
 								"north": {"uv": [12, 0], "uv_size": [3, 9]},
 								"east": {"uv": [3, 0], "uv_size": [3, 9]},

@@ -33,6 +33,7 @@ public class ModItems {
     public static final Item LMG_AMMO_BOX = registerItem("lmg_ammo_box", new Item(new FabricItemSettings().maxCount(64)));
 	public static final Item BLUEPRINT_BUNDLE = registerItem("blueprint_bundle", new BlueprintBundleItem(new FabricItemSettings().maxCount(1)));
 	public static final Item PISTOL_BLUEPRINT = registerItem("blueprint_pistol_light", new BlueprintItem(new FabricItemSettings().maxCount(1)));
+	public static final Item SERVICE_PISTOL_BLUEPRINT = registerItem("blueprint_pistol_service", new BlueprintItem(new FabricItemSettings().maxCount(1)));
 	public static final Item HEAVY_PISTOL_BLUEPRINT = registerItem("blueprint_pistol_heavy", new BlueprintItem(new FabricItemSettings().maxCount(1)));
 	public static final Item MAGNUM_REVOLVER_BLUEPRINT = registerItem("blueprint_revolver_magnum", new BlueprintItem(new FabricItemSettings().maxCount(1)));
 	public static final Item OLD_ARMY_REVOLVER_BLUEPRINT = registerItem("blueprint_revolver_coltarmy", new BlueprintItem(new FabricItemSettings().maxCount(1)));
@@ -49,6 +50,7 @@ public class ModItems {
 	public static final Item ARCTIC_RIFLE_BLUEPRINT = registerItem("blueprint_sniper_arctic", new BlueprintItem(new FabricItemSettings().maxCount(1)));
 	public static final Item BRUSH_GUN_BLUEPRINT = registerItem("blueprint_sniper_cowboy", new BlueprintItem(new FabricItemSettings().maxCount(1)));
 	public static final Item MARKSMAN_RIFLE_BLUEPRINT = registerItem("blueprint_sniper_marksman", new BlueprintItem(new FabricItemSettings().maxCount(1)));
+	public static final Item MOTHERLAND_MARKSMAN_RIFLE_BLUEPRINT = registerItem("blueprint_sniper_dragunov", new BlueprintItem(new FabricItemSettings().maxCount(1)));
 	public static final Item LMG_BLUEPRINT = registerItem("blueprint_lmg_m60", new BlueprintItem(new FabricItemSettings().maxCount(1)));
 	public static final Item MINIGUN_BLUEPRINT = registerItem("blueprint_lmg_minigun", new BlueprintItem(new FabricItemSettings().maxCount(1)));
 	public static final Item ANTI_MATERIEL_RIFLE_BLUEPRINT = registerItem("blueprint_amr_classic", new BlueprintItem(new FabricItemSettings().maxCount(1)));
@@ -58,6 +60,30 @@ public class ModItems {
 	public static final Item STANDARD_RIFLE_BULLET = registerItem("standard_rifle_cartridge", new Item(new FabricItemSettings().maxCount(64)));
 	public static final Item HEAVY_RIFLE_BULLET = registerItem("heavy_rifle_cartridge", new Item(new FabricItemSettings().maxCount(64)));
 	public static final Item SHOTGUN_SHELL = registerItem("shotgun_shell", new Item(new FabricItemSettings().maxCount(64)));
+
+
+
+	public static final Item GRIP_FOREGRIP = registerItem("grip_foregrip", new AttachmentItem(new FabricItemSettings().maxCount(1),
+			1,
+			0.8f,
+			0.8f,
+			AttachmentItem.AttachType.GRIP,
+			false
+	));
+	public static final Item SIGHT_HOLO = registerItem("sight_holo", new AttachmentItem(new FabricItemSettings().maxCount(1),
+			1,
+			1,
+			0.9f,
+			AttachmentItem.AttachType.SIGHT,
+			false
+	));
+	public static final Item MUZZLE_MBRAKE = registerItem("muzzle_mbrake", new AttachmentItem(new FabricItemSettings().maxCount(1),
+			1,
+			0.8f,
+			0.8f,
+			AttachmentItem.AttachType.MUZZLE,
+			false
+	));
 
 	public static final Item PISTOL = registerItem("pistol_light", new GunItem(new FabricItemSettings().maxCount(1),
 			"pistol_light",
@@ -84,7 +110,8 @@ public class ModItems {
 			10,
 			20,
 			GunItem.FiringType.SEMI_AUTO,
-			GunItem.ArmType.HANDGUN_TWOHAND)
+			GunItem.ArmType.HANDGUN_TWOHAND,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.MUZZLE})
 	{
 	});
 	public static final Item HEAVY_PISTOL = registerItem("pistol_heavy", new GunItem(new FabricItemSettings().maxCount(1),
@@ -112,7 +139,8 @@ public class ModItems {
 			10,
 			20,
 			GunItem.FiringType.SEMI_AUTO,
-			GunItem.ArmType.HANDGUN_TWOHAND)
+			GunItem.ArmType.HANDGUN_TWOHAND,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.MUZZLE})
 	{
 	});
 	public static final Item SERVICE_PISTOL = registerItem("pistol_service", new GunItem(new FabricItemSettings().maxCount(1),
@@ -140,7 +168,8 @@ public class ModItems {
 			18,
 			24,
 			GunItem.FiringType.SEMI_AUTO,
-			GunItem.ArmType.HANDGUN_ONEHAND)
+			GunItem.ArmType.HANDGUN_ONEHAND,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.MUZZLE})
 	{
 	});
     public static final Item MAGNUM_REVOLVER = registerItem("revolver_magnum", new GunItem(new FabricItemSettings().maxCount(1),
@@ -168,7 +197,8 @@ public class ModItems {
             20,
             30,
 			GunItem.FiringType.SEMI_AUTO,
-			GunItem.ArmType.HANDGUN_TWOHAND)
+			GunItem.ArmType.HANDGUN_TWOHAND,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.MUZZLE})
     {
     });
     public static final Item OLD_ARMY_REVOLVER = registerItem("revolver_coltarmy", new GunItem(new FabricItemSettings().maxCount(1),
@@ -196,7 +226,8 @@ public class ModItems {
             17,
             46,
 			GunItem.FiringType.SEMI_AUTO,
-			GunItem.ArmType.REVOLVER_FANNING)
+			GunItem.ArmType.REVOLVER_FANNING,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.MUZZLE})
     {
     });
 	public static final Item MACHINE_PISTOL = registerItem("smg_machinepistol", new GunItem(new FabricItemSettings().maxCount(1),
@@ -224,7 +255,8 @@ public class ModItems {
 			11,
 			21,
 			GunItem.FiringType.AUTO,
-			GunItem.ArmType.HANDGUN_TWOHAND)
+			GunItem.ArmType.HANDGUN_TWOHAND,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.GRIP,AttachmentItem.AttachType.MUZZLE})
 	{
 	});
     public static final Item HEAVY_SMG = registerItem("smg_heavy", new GunItem(new FabricItemSettings().maxCount(1),
@@ -252,7 +284,8 @@ public class ModItems {
             27,
             49,
 			GunItem.FiringType.AUTO,
-			GunItem.ArmType.LONG_GUNS)
+			GunItem.ArmType.LONG_GUNS,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.SIGHT, AttachmentItem.AttachType.GRIP, AttachmentItem.AttachType.MUZZLE})
     {
     });
 
@@ -281,7 +314,8 @@ public class ModItems {
 			21,
 			33,
 			GunItem.FiringType.AUTO,
-			GunItem.ArmType.LONG_GUNS)
+			GunItem.ArmType.LONG_GUNS,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.SIGHT, AttachmentItem.AttachType.GRIP, AttachmentItem.AttachType.MUZZLE})
 	{
 	});
 
@@ -310,7 +344,8 @@ public class ModItems {
 		21,
 		32,
 		GunItem.FiringType.AUTO,
-		GunItem.ArmType.LONG_GUNS)
+		GunItem.ArmType.LONG_GUNS,
+		new AttachmentItem.AttachType[]{AttachmentItem.AttachType.SIGHT, AttachmentItem.AttachType.GRIP, AttachmentItem.AttachType.MUZZLE})
 	{
 	});
 	public static final Item HEAVY_ASSAULT_RIFLE = registerItem("assaultrifle_heavy", new GunItem(new FabricItemSettings().maxCount(1),
@@ -338,7 +373,8 @@ public class ModItems {
 		21,
 		32,
 		GunItem.FiringType.AUTO,
-		GunItem.ArmType.LONG_GUNS)
+		GunItem.ArmType.LONG_GUNS,
+		new AttachmentItem.AttachType[]{AttachmentItem.AttachType.SIGHT, AttachmentItem.AttachType.GRIP, AttachmentItem.AttachType.MUZZLE})
 	{
 	});
     public static final Item WAR_TORN_ASSAULT_RIFLE = registerItem("assaultrifle_rus", new GunItem(new FabricItemSettings().maxCount(1),
@@ -366,7 +402,8 @@ public class ModItems {
             24,
             39,
 			GunItem.FiringType.AUTO,
-			GunItem.ArmType.LONG_GUNS)
+			GunItem.ArmType.LONG_GUNS,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.SIGHT, AttachmentItem.AttachType.GRIP, AttachmentItem.AttachType.MUZZLE})
     {
     });
 
@@ -395,7 +432,8 @@ public class ModItems {
 			10,
 			26,
 			GunItem.FiringType.SEMI_AUTO,
-			GunItem.ArmType.LONG_GUNS)
+			GunItem.ArmType.LONG_GUNS,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.SIGHT, AttachmentItem.AttachType.MUZZLE})
 	{
 	});
 
@@ -424,7 +462,8 @@ public class ModItems {
         5,
         15,
 		GunItem.FiringType.SEMI_AUTO,
-		GunItem.ArmType.LONG_GUNS)
+		GunItem.ArmType.LONG_GUNS,
+		new AttachmentItem.AttachType[]{AttachmentItem.AttachType.SIGHT, AttachmentItem.AttachType.MUZZLE})
 	{
 	});
 
@@ -453,7 +492,8 @@ public class ModItems {
             5,
             17,
 			GunItem.FiringType.SEMI_AUTO,
-			GunItem.ArmType.LONG_GUNS)
+			GunItem.ArmType.LONG_GUNS,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.SIGHT, AttachmentItem.AttachType.MUZZLE})
     {
     });
 
@@ -482,7 +522,8 @@ public class ModItems {
         13,
         24,
 		GunItem.FiringType.SEMI_AUTO,
-		GunItem.ArmType.LONG_GUNS)
+		GunItem.ArmType.LONG_GUNS,
+		new AttachmentItem.AttachType[]{AttachmentItem.AttachType.MUZZLE})
 	{
 	});
 
@@ -511,7 +552,8 @@ public class ModItems {
             48,
             68,
             GunItem.FiringType.SEMI_AUTO,
-			GunItem.ArmType.LONG_GUNS)
+			GunItem.ArmType.LONG_GUNS,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.MUZZLE})
     {
     });
 
@@ -540,7 +582,8 @@ public class ModItems {
 			9,
 			21,
 			GunItem.FiringType.SEMI_AUTO,
-			GunItem.ArmType.LONG_GUNS)
+			GunItem.ArmType.LONG_GUNS,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.MUZZLE})
 	{
 	});
 
@@ -569,7 +612,38 @@ public class ModItems {
 			35,
 			40,
 			GunItem.FiringType.SEMI_AUTO,
-			GunItem.ArmType.LONG_GUNS)
+			GunItem.ArmType.LONG_GUNS,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.GRIP, AttachmentItem.AttachType.MUZZLE})
+	{
+	});
+
+	public static final Item MOTHERLAND_MARKSMAN_RIFLE = registerItem("sniper_dragunov", new GunItem(new FabricItemSettings().maxCount(1),
+			"sniper_dragunov",
+			"sniper_dragunov",
+			11,
+			3,
+			10,
+			STANDARD_RIFLE_BULLET,
+			50,
+			new float[] {1f, 1f},
+			new float[] {1.25f, 3.75f},
+			1,
+			GunItem.LoadingType.MAGAZINE,
+			null,
+			ModSounds.RELOAD_WAR_TORN_AR_P1,
+			ModSounds.RELOAD_WAR_TORN_AR_P2,
+			ModSounds.RELOAD_WAR_TORN_AR_P3,
+			ModSounds.SNIPER_MARKSMAN,
+			null,
+			1,
+			true,
+			false,
+			10,
+			24,
+			39,
+			GunItem.FiringType.SEMI_AUTO,
+			GunItem.ArmType.LONG_GUNS,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.MUZZLE})
 	{
 	});
 
@@ -581,7 +655,7 @@ public class ModItems {
 			100,
 			STANDARD_RIFLE_BULLET,
 			117,
-			new float[] {0.5f, 0.5f},
+			new float[] {0.75f, 0.75f},
 			new float[] {1f, 2f},
 			1,
 			GunItem.LoadingType.MAGAZINE,
@@ -598,7 +672,8 @@ public class ModItems {
 			70,
 			90,
 			GunItem.FiringType.AUTO,
-			GunItem.ArmType.LONG_GUNS)
+			GunItem.ArmType.LONG_GUNS,
+			new AttachmentItem.AttachType[]{})
 	{
 	});
 
@@ -627,7 +702,8 @@ public class ModItems {
 			48,
 			68,
 			GunItem.FiringType.SEMI_AUTO,
-			GunItem.ArmType.LONG_GUNS)
+			GunItem.ArmType.LONG_GUNS,
+			new AttachmentItem.AttachType[]{AttachmentItem.AttachType.MUZZLE})
 	{
 	});
 
@@ -656,7 +732,8 @@ public class ModItems {
 			85,
 			133,
 			GunItem.FiringType.AUTO,
-			GunItem.ArmType.MINIGUN)
+			GunItem.ArmType.MINIGUN,
+			new AttachmentItem.AttachType[]{})
 	{
 	});
 
